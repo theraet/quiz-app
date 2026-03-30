@@ -3,43 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Niyanthranam Quiz</title>
+    <title>Niyanthranam Quiz Pro</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f7f6; margin: 0; text-align: center; }
-        .header { background: #1B5E20; color: #D4AF37; padding: 20px; font-weight: bold; }
-        .card { background: white; margin: 20px; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        button { background: #D4AF37; border: none; padding: 15px; width: 80%; margin: 10px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        :root { --primary: #1B5E20; --accent: #D4AF37; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        
+        .header { width: 100%; background: var(--primary); color: var(--accent); padding: 20px 0; text-align: center; font-size: 24px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        
+        .card { background: white; width: 90%; max-width: 500px; margin-top: 30px; padding: 25px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); text-align: center; }
+        
+        #question { font-size: 1.2rem; color: #333; margin-bottom: 20px; line-height: 1.5; }
+        
+        .option-btn { background: #fff; border: 2px solid #e0e0e0; color: #444; width: 100%; padding: 15px; margin: 8px 0; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: 0.3s; font-weight: 500; }
+        .option-btn:hover { border-color: var(--primary); background: #f0fdf4; }
+        
+        .score-area { display: none; }
+        .score-text { font-size: 1.5rem; color: var(--primary); font-weight: bold; margin: 20px 0; }
+        
+        #restart-btn { background: var(--accent); color: #000; border: none; padding: 15px 30px; border-radius: 30px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        .progress { font-size: 0.9rem; color: #888; margin-bottom: 10px; }
     </style>
 </head>
 <body>
+
     <div class="header">NIYANTHRANAM QUIZ</div>
-    <div id="quiz-container" class="card">
-        <h2 id="question">Loading Questions...</h2>
-        <div id="options"></div>
+
+    <div class="card" id="quiz-card">
+        <div class="progress" id="progress-text">ചോദ്യം: 1/--</div>
+        <h2 id="question">ചോദ്യങ്ങൾ ലോഡ് ചെയ്യുന്നു...</h2>
+        <div id="options-container"></div>
     </div>
+
+    <div class="card score-area" id="score-card">
+        <h2>പരീക്ഷ പൂർത്തിയായി!</h2>
+        <div class="score-text" id="final-score">സ്കോർ: 0 / 0</div>
+        <button id="restart-btn" onclick="restartQuiz()">വീണ്ടും ശ്രമിക്കുക</button>
+    </div>
+
     <script>
         let questions = [];
-        let index = 0;
+        let currentIndex = 0;
+        let score = 0;
 
-        // Load your database.json
+        // Load database.json
         fetch('database.json')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
             .then(data => {
-                questions = data["Kerala Current Affairs"]; // or any section
-                showQuestion();
+                // Adjust this key if your JSON category name is different
+                const section = Object.keys(data)[0]; 
+                questions = data[section];
+                loadQuestion();
+            })
+            .catch(error => {
+                document.getElementById('question').innerText = "Error: database.json കാണാൻ സാധിക്കുന്നില്ല!";
+                console.error('Error loading JSON:', error);
             });
 
-        function showQuestion() {
-            const q = questions[index];
+        function loadQuestion() {
+            const q = questions[currentIndex];
+            document.getElementById('progress-text').innerText = `ചോദ്യം: ${currentIndex + 1} / ${questions.length}`;
             document.getElementById('question').innerText = q.q;
-            const optDiv = document.getElementById('options');
-            optDiv.innerHTML = '';
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
             q.options.forEach(opt => {
                 const btn = document.createElement('button');
+                btn.className = 'option-btn';
                 btn.innerText = opt;
-                btn.onclick = () => { index++; if(index < questions.length) showQuestion(); else alert("Done!"); };
-                optDiv.appendChild(btn);
+                btn.onclick = () => checkAnswer(opt, q.ans);
+                container.appendChild(btn);
             });
+        }
+
+        function checkAnswer(selected, correct) {
+            if (selected === correct) {
+                score++;
+            }
+            
+            currentIndex++;
+            
+            if (currentIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-card').style.display = 'none';
+            document.getElementById('score-card').style.display = 'block';
+            document.getElementById('final-score').innerText = `നിങ്ങളുടെ സ്കോർ: ${score} / ${questions.length}`;
+        }
+
+        function restartQuiz() {
+            currentIndex = 0;
+            score = 0;
+            document.getElementById('quiz-card').style.display = 'block';
+            document.getElementById('score-card').style.display = 'none';
+            loadQuestion();
         }
     </script>
 </body>
