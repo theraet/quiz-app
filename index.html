@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Niyanthranam Quiz</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f7f6; margin: 0; text-align: center; }
+        .header { background: #1B5E20; color: #D4AF37; padding: 20px; font-weight: bold; }
+        .card { background: white; margin: 20px; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        button { background: #D4AF37; border: none; padding: 15px; width: 80%; margin: 10px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="header">NIYANTHRANAM QUIZ</div>
+    <div id="quiz-container" class="card">
+        <h2 id="question">Loading Questions...</h2>
+        <div id="options"></div>
+    </div>
+    <script>
+        let questions = [];
+        let index = 0;
+
+        // Load your database.json
+        fetch('database.json')
+            .then(response => response.json())
+            .then(data => {
+                questions = data["Kerala Current Affairs"]; // or any section
+                showQuestion();
+            });
+
+        function showQuestion() {
+            const q = questions[index];
+            document.getElementById('question').innerText = q.q;
+            const optDiv = document.getElementById('options');
+            optDiv.innerHTML = '';
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.innerText = opt;
+                btn.onclick = () => { index++; if(index < questions.length) showQuestion(); else alert("Done!"); };
+                optDiv.appendChild(btn);
+            });
+        }
+    </script>
+</body>
+</html>
